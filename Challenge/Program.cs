@@ -34,13 +34,22 @@ namespace Challenge
 
         static string Run(string input)
         {
-
             string[] lines = input.Split( new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None );
+            var gridString = lines[0]; // eg 5 3, 50 50
+
+            var grids = gridString.Split(' '); // assuming a single space
+            var x = int.Parse(grids[0]); // assuming it will work 
+            var y = int.Parse(grids[1]);
+
 
             return lines[2];
         }
 
         [Fact]
-        public void RunTest() => Assert.Equal("d e", Run(@"a b\nc\nd e"));
+        public void RunTest()
+        {
+            var s = "5 3\n1 1 E\nRFRFRFRF";
+            Assert.Equal("1 1 E", Run(s));
+        }
     }
 }
