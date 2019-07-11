@@ -1,6 +1,5 @@
 ﻿using System;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Challenge
 {
@@ -28,10 +27,7 @@ namespace Challenge
         // each ship is processed sequentially ie finishes executing before the next ship begins
         // max value of coordinate is 50, all instruction strings < 100 characters in length
 
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World!");
-        }
+        static void Main(string[] args) => Console.WriteLine("Hello World!");
 
         static string Run(string input)
         {
@@ -63,40 +59,44 @@ namespace Challenge
             foreach (char instruction in instructionsString)
             {
                 var instruc = instruction.ToString();
-                if (instruc == "R")
-                {
-                    // want to turn 90 degrees right
-                }
+                if (instruc == "L" || instruc == "R")
+                    currentOrientation = Rotate(currentOrientation, instruc);
+                //if (instruc == "F")
 
             }
             return lines[2];
         }
 
-        enum Direction
+        static (int x, int y) Move(int x, int y)
         {
-            North,
-            East,
-            South,
-            West
+            // HERE!!
         }
+
         static string Rotate(string current, string direction)
         {
             // N E S W
-            var stuff = "NESW";
-            int thing = stuff.IndexOf(current); // eg 1 is East
+            var compass = "NESW";
+            int index = compass.IndexOf(current); // eg 1 is East
 
-            if (direction == "R") thing++; else thing--;
+            if (direction == "R") index++; else index--;
 
-            if (thing == 4) thing = 0; // from W to N
+            if (index == 4) index = 0; // from W to N (rotate Right)
+            if (index == -1) index = 3; // from N to W (rotate Left) 
 
-            // HERE
-            return "";
+            return compass[index].ToString();
         }
 
         [Fact]
-        public void RotateTest() => Assert.Equal("S", Rotate("E", "R"));
+        public void RotateEastToSouth() => Assert.Equal("S", Rotate("E", "R"));
         [Fact]
         public void RotateWestToNorth() => Assert.Equal("N", Rotate("W", "R"));
+        [Fact]
+        public void RotateSouthToEast() => Assert.Equal("E", Rotate("S", "L"));
+        [Fact]
+        public void RotateNorthToWest() => Assert.Equal("W", Rotate("N", "L"));
+
+
+
 
 
         [Fact]
