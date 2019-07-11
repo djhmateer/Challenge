@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Challenge
 {
@@ -34,22 +35,71 @@ namespace Challenge
 
         static string Run(string input)
         {
-            string[] lines = input.Split( new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None );
-            var gridString = lines[0]; // eg 5 3, 50 50
+            // split input into a string array based on newline character
+            string[] lines = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-            var grids = gridString.Split(' '); // assuming a single space
-            var x = int.Parse(grids[0]); // assuming it will work 
-            var y = int.Parse(grids[1]);
+            // make the grid based on the the first line
+            var gridSizeStringArray = lines[0].Split(' '); // eg 5 3  assuming a single space
+            var gridMaxX = int.Parse(gridSizeStringArray[0]); // eg 5 
+            var gridMaxY = int.Parse(gridSizeStringArray[1]); // eg 3
 
 
+            // get starting position of the ship
+            var startPosStringArray = lines[1].Split(' '); //eg 1 1 E
+            var startPosX = int.Parse(startPosStringArray[0]); // eg 1
+            var startPosY = int.Parse(startPosStringArray[1]); // eg 1
+            var startPosOrientation = startPosStringArray[2]; // eg E
+
+            // get the instructions
+            var instructionsString = lines[2];
+
+            // 0,0 is lower left, and 5,3 is top right
+
+            // iterate over each instruction
+            // using starting position
+            int currentPosX = startPosX;
+            int currentPosY = startPosY;
+            string currentOrientation = startPosOrientation;
+            foreach (char instruction in instructionsString)
+            {
+                var instruc = instruction.ToString();
+                if (instruc == "R")
+                {
+                    // want to turn 90 degrees right
+                }
+
+            }
             return lines[2];
         }
 
-        [Fact]
-        public void RunTest()
+        enum Direction
         {
-            var s = "5 3\n1 1 E\nRFRFRFRF";
-            Assert.Equal("1 1 E", Run(s));
+            North,
+            East,
+            South,
+            West
         }
+        static string Rotate(string current, string direction)
+        {
+            // N E S W
+            var stuff = "NESW";
+            int thing = stuff.IndexOf(current); // eg 1 is East
+
+            if (direction == "R") thing++; else thing--;
+
+            if (thing == 4) thing = 0; // from W to N
+
+            // HERE
+            return "";
+        }
+
+        [Fact]
+        public void RotateTest() => Assert.Equal("S", Rotate("E", "R"));
+        [Fact]
+        public void RotateWestToNorth() => Assert.Equal("N", Rotate("W", "R"));
+
+
+        [Fact]
+        public void RunTest() => Assert.Equal("1 1 E", Run("5 3\n1 1 E\nRFRFRFRF"));
     }
 }
