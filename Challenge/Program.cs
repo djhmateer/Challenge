@@ -36,7 +36,7 @@ namespace Challenge
             int gridMaxX, gridMaxY, currentPosX = 0, currentPosY = 0;
             string currentOrientation = null;
             var isLost = false;
-            var isLostCoordsList = new List<(int x, int y)>();
+            var warningCoordsList = new List<(int x, int y, string direction)>();
 
             // loop over each ship 
             foreach (var input in inputs)
@@ -71,27 +71,42 @@ namespace Challenge
                     if (instruction == "L" || instruction == "R")
                         currentOrientation = Rotate(currentOrientation, instruction);
                     if (instruction == "F")
-                        (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation, gridMaxX, gridMaxY, isLostCoordsList);
-                    // Gone off the grid?
-                    if (isLost) break;
+                        (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation, gridMaxX, gridMaxY,
+                            warningCoordsList);
+                    if (isLost) break; // Gone off the grid and lost
                 }
             }
-
             return currentPosX + " " + currentPosY + " " + currentOrientation + (isLost ? " LOST" : null);
         }
 
-        static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY, List<(int, int)> isLostCoordsList)
+        static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY,
+            List<(int, int, string)> warningCoordsList)
         {
             bool isLost = false;
             if (currentOrientation == "N")
             {
-                y++;
-                // does this go out of bounds?
-                if (y > gridMaxY)
+                var yy = y + 1;
+                // would this go out of bounds?
+                if (yy > gridMaxY)
                 {
-                    isLost = true;
-                    y--;
+                    // was there a warning?
+                    (int x, int y, string) thing = (x, y, "N");
+                    if (warningCoordsList.Contains(thing))
+                    {
+                        isLost = false;
+                        // keep on current coords
+                    }
+                    //**HERE**
+                    else
+                    {
+                        isLost = true;
+                        y--;
+                    }
+
                 }
+                else
+                    y++;
+
             }
 
             if (currentOrientation == "S")
@@ -145,13 +160,20 @@ namespace Challenge
         // West
         [InlineData(0, 1, "W", 2, 2, null, 0, 1, true)]
 
-        // **HERE** knownIsLostCoords patch in????
-        [InlineData(2, 2, "N", 2, 2, (2,2), 2, 2, false)]
 
         public void MoveTests(int currentX, int currentY, string orientation, int gridMaxX, int gridMaxY, List<(int, int)> isLostCoordsList, int expectedX, int expectedY, bool isLost)
         {
             Assert.Equal((expectedX, expectedY, isLost), Move(currentX, currentY, orientation, gridMaxX, gridMaxY, isLostCoordsList));
         }
+
+        // **HERE** warningCoords patch in????
+        [Fact]
+        public void MoveWithWarningCoords()
+        {
+            var expected = (2, 0, false);
+            Assert.Equal(expected, Move(2, 0, "E", 2, 2, new List<(int, int, string)> { (2, 0, "E") }));
+        }
+
 
         [Fact]
         public void RunFirstShip() => Assert.Equal("1 1 E", Run(new[] { "5 3\n1 1 E\nRFRFRFRF" }));
