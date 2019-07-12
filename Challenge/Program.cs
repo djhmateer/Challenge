@@ -55,43 +55,99 @@ namespace Challenge
             int currentPosX = startPosX;
             int currentPosY = startPosY;
             string currentOrientation = startPosOrientation;
+            bool isLost = false;
             foreach (char i in instructionsString)
             {
                 var instruction = i.ToString();
                 if (instruction == "L" || instruction == "R")
                     currentOrientation = Rotate(currentOrientation, instruction);
                 if (instruction == "F")
-                    (currentPosX, currentPosY) = Move(currentPosX, currentPosY, currentOrientation);
-
+                    (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation, gridMaxX, gridMaxY);
+                if (isLost) break; 
             }
 
-            return currentPosX + " " + currentPosY + " " + currentOrientation;
+            var message = isLost ? " LOST" : null;
+            return currentPosX + " " + currentPosY + " " + currentOrientation + message;
         }
 
-        static (int x, int y) Move(int x, int y, string currentOrientation)
+        static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY)
         {
-            if (currentOrientation == "N") y ++; 
-            if (currentOrientation == "S") y --; 
-            if (currentOrientation == "E") x ++; 
-            if (currentOrientation == "W") x --; 
+            bool isLost = false;
+            if (currentOrientation == "N")
+            {
+                y++;
+                // does this go out of bounds?
+                if (y > gridMaxY)
+                {
+                    isLost = true;
+                    y--;
+                }
+            }
 
-            return (x, y);
+            if (currentOrientation == "S")
+            {
+                y--;
+                if (y < 0)
+                {
+                    isLost = true;
+                    y++;
+                }
+            }
+
+            if (currentOrientation == "E")
+            {
+                x++;
+                if (x > gridMaxX)
+                {
+                    isLost = true;
+                    x--;
+                }
+            }
+
+            if (currentOrientation == "W")
+            {
+                x--;
+                if (x < 0)
+                {
+                    isLost = true;
+                    x++;
+                }
+            }
+
+            return (x, y, isLost);
         }
 
         [Theory]
-        [InlineData(0, 0, "N", 0, 1)]
-        [InlineData(0, 1, "S", 0, 0)]
-        [InlineData(0, 0, "E", 1, 0)]
-        [InlineData(1, 0, "W", 0, 0)]
-        public void MoveTests(int x, int y, string orientation, int expectedX, int expectedY)
+        // normal movement
+        // 9,9 is gridMaxY, gridMaxY
+        [InlineData(0, 0, "N", 9, 9, 0, 1, false)]
+        [InlineData(0, 1, "S", 9, 9, 0, 0, false)]
+        [InlineData(0, 0, "E", 9, 9, 1, 0, false)]
+        [InlineData(1, 0, "W", 9, 9, 0, 0, false)]
+        
+        // isLost (with no previous isLosts)
+        // North - go off top so lost, gridMaxX 2, gridMaxY 2, expectedX 2, expectedY 2
+        [InlineData(2, 2, "N", 2, 2, 2, 2, true)]
+        // South - go off bottom
+        [InlineData(0, 0, "S", 2, 2, 0, 0, true)]
+        // East
+        [InlineData(2, 1, "E", 2, 2, 2, 1, true)]
+        // West
+        [InlineData(0, 1, "W", 2, 2, 0, 1, true)]
+        public void MoveTests(int currentX, int currentY, string orientation, int gridMaxX, int gridMaxY, int expectedX, int expectedY, bool isLost)
         {
-            Assert.Equal((expectedX, expectedY), Move(x, y, orientation));
+            Assert.Equal((expectedX, expectedY, isLost), Move(currentX, currentY, orientation, gridMaxX, gridMaxY));
         }
+
+        [Fact]
+        public void RunFirstShip() => Assert.Equal("1 1 E", Run("5 3\n1 1 E\nRFRFRFRF"));
+        [Fact]
+        public void RunSecondShip() => Assert.Equal("3 3 N LOST", Run("5 3\n3 2 N\nFRRFLLFFRRFLL"));
+
 
 
         static string Rotate(string current, string direction)
         {
-            // N E S W
             var compass = "NESW";
             int index = compass.IndexOf(current); // eg 1 is East
 
@@ -112,8 +168,5 @@ namespace Challenge
         [Fact]
         public void RotateNorthToWest() => Assert.Equal("W", Rotate("N", "L"));
 
-
-        [Fact]
-        public void RunTest() => Assert.Equal("1 1 E", Run("5 3\n1 1 E\nRFRFRFRF"));
     }
 }
