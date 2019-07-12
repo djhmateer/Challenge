@@ -52,25 +52,42 @@ namespace Challenge
             // 0,0 is lower left, and 5,3 is top right
 
             // iterate over each instruction
-            // using starting position
             int currentPosX = startPosX;
             int currentPosY = startPosY;
             string currentOrientation = startPosOrientation;
-            foreach (char instruction in instructionsString)
+            foreach (char i in instructionsString)
             {
-                var instruc = instruction.ToString();
-                if (instruc == "L" || instruc == "R")
-                    currentOrientation = Rotate(currentOrientation, instruc);
-                //if (instruc == "F")
+                var instruction = i.ToString();
+                if (instruction == "L" || instruction == "R")
+                    currentOrientation = Rotate(currentOrientation, instruction);
+                if (instruction == "F")
+                    (currentPosX, currentPosY) = Move(currentPosX, currentPosY, currentOrientation);
 
             }
-            return lines[2];
+
+            return currentPosX + " " + currentPosY + " " + currentOrientation;
         }
 
-        static (int x, int y) Move(int x, int y)
+        static (int x, int y) Move(int x, int y, string currentOrientation)
         {
-            // HERE!!
+            if (currentOrientation == "N") y ++; 
+            if (currentOrientation == "S") y --; 
+            if (currentOrientation == "E") x ++; 
+            if (currentOrientation == "W") x --; 
+
+            return (x, y);
         }
+
+        [Theory]
+        [InlineData(0, 0, "N", 0, 1)]
+        [InlineData(0, 1, "S", 0, 0)]
+        [InlineData(0, 0, "E", 1, 0)]
+        [InlineData(1, 0, "W", 0, 0)]
+        public void MoveTests(int x, int y, string orientation, int expectedX, int expectedY)
+        {
+            Assert.Equal((expectedX, expectedY), Move(x, y, orientation));
+        }
+
 
         static string Rotate(string current, string direction)
         {
@@ -94,9 +111,6 @@ namespace Challenge
         public void RotateSouthToEast() => Assert.Equal("E", Rotate("S", "L"));
         [Fact]
         public void RotateNorthToWest() => Assert.Equal("W", Rotate("N", "L"));
-
-
-
 
 
         [Fact]
