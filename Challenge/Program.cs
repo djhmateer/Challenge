@@ -39,7 +39,6 @@ namespace Challenge
             var gridMaxX = int.Parse(gridSizeStringArray[0]); // eg 5 
             var gridMaxY = int.Parse(gridSizeStringArray[1]); // eg 3
 
-
             // get starting position of the ship
             var startPosStringArray = lines[1].Split(' '); //eg 1 1 E
             var startPosX = int.Parse(startPosStringArray[0]); // eg 1
@@ -63,11 +62,11 @@ namespace Challenge
                     currentOrientation = Rotate(currentOrientation, instruction);
                 if (instruction == "F")
                     (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation, gridMaxX, gridMaxY);
+                // Gone off the grid?
                 if (isLost) break; 
             }
 
-            var message = isLost ? " LOST" : null;
-            return currentPosX + " " + currentPosY + " " + currentOrientation + message;
+            return currentPosX + " " + currentPosY + " " + currentOrientation + (isLost ? " LOST" : null);
         }
 
         static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY)
@@ -134,6 +133,9 @@ namespace Challenge
         [InlineData(2, 1, "E", 2, 2, 2, 1, true)]
         // West
         [InlineData(0, 1, "W", 2, 2, 0, 1, true)]
+
+        // **HERE** knownIsLostCoords patch in????
+
         public void MoveTests(int currentX, int currentY, string orientation, int gridMaxX, int gridMaxY, int expectedX, int expectedY, bool isLost)
         {
             Assert.Equal((expectedX, expectedY, isLost), Move(currentX, currentY, orientation, gridMaxX, gridMaxY));
@@ -141,8 +143,14 @@ namespace Challenge
 
         [Fact]
         public void RunFirstShip() => Assert.Equal("1 1 E", Run("5 3\n1 1 E\nRFRFRFRF"));
+        
         [Fact]
         public void RunSecondShip() => Assert.Equal("3 3 N LOST", Run("5 3\n3 2 N\nFRRFLLFFRRFLL"));
+
+        // ThirdShip depends on the knowledge of SecondShip for an inLost **HERE**
+        [Fact]
+        public void RunThirdShip() => Assert.Equal("2 3 S", Run("5 3\n0 3 W\nLLFFFLFLFL"));
+
 
 
 
