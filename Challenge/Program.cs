@@ -29,41 +29,49 @@ namespace Challenge
 
         static void Main(string[] args) => Console.WriteLine("Hello World!");
 
-        static string Run(string input)
+        // accepts an array of strings which are ships
+        static string Run(string[] inputs)
         {
-            // split input into a string array based on newline character
-            string[] lines = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            int gridMaxX;
 
-            // make the grid based on the the first line
-            var gridSizeStringArray = lines[0].Split(' '); // eg 5 3  assuming a single space
-            var gridMaxX = int.Parse(gridSizeStringArray[0]); // eg 5 
-            var gridMaxY = int.Parse(gridSizeStringArray[1]); // eg 3
-
-            // get starting position of the ship
-            var startPosStringArray = lines[1].Split(' '); //eg 1 1 E
-            var startPosX = int.Parse(startPosStringArray[0]); // eg 1
-            var startPosY = int.Parse(startPosStringArray[1]); // eg 1
-            var startPosOrientation = startPosStringArray[2]; // eg E
-
-            // get the instructions
-            var instructionsString = lines[2];
-
-            // 0,0 is lower left, and 5,3 is top right
-
-            // iterate over each instruction
-            int currentPosX = startPosX;
-            int currentPosY = startPosY;
-            string currentOrientation = startPosOrientation;
-            bool isLost = false;
-            foreach (char i in instructionsString)
+            // loop over each ship 
+            foreach (var input in inputs)
             {
-                var instruction = i.ToString();
-                if (instruction == "L" || instruction == "R")
-                    currentOrientation = Rotate(currentOrientation, instruction);
-                if (instruction == "F")
-                    (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation, gridMaxX, gridMaxY);
-                // Gone off the grid?
-                if (isLost) break; 
+                // split input into a string array based on newline character
+                string[] lines = input.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
+
+                // make the grid based on the the first line
+                var gridSizeStringArray = lines[0].Split(' '); // eg 5 3  assuming a single space
+                gridMaxX = int.Parse(gridSizeStringArray[0]); // eg 5 
+                var gridMaxY = int.Parse(gridSizeStringArray[1]); // eg 3
+
+                // get starting position of the ship
+                var startPosStringArray = lines[1].Split(' '); //eg 1 1 E
+                var startPosX = int.Parse(startPosStringArray[0]); // eg 1
+                var startPosY = int.Parse(startPosStringArray[1]); // eg 1
+                var startPosOrientation = startPosStringArray[2]; // eg E
+
+                // get the instructions
+                var instructionsString = lines[2];
+
+                // 0,0 is lower left, and 5,3 is top right
+
+                // iterate over each instruction
+                int currentPosX = startPosX;
+                int currentPosY = startPosY;
+                string currentOrientation = startPosOrientation;
+                bool isLost = false;
+                foreach (char i in instructionsString)
+                {
+                    var instruction = i.ToString();
+                    if (instruction == "L" || instruction == "R")
+                        currentOrientation = Rotate(currentOrientation, instruction);
+                    if (instruction == "F")
+                        (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation,
+                            gridMaxX, gridMaxY);
+                    // Gone off the grid?
+                    if (isLost) break;
+                }
             }
 
             return currentPosX + " " + currentPosY + " " + currentOrientation + (isLost ? " LOST" : null);
@@ -148,6 +156,7 @@ namespace Challenge
         public void RunSecondShip() => Assert.Equal("3 3 N LOST", Run("5 3\n3 2 N\nFRRFLLFFRRFLL"));
 
         // ThirdShip depends on the knowledge of SecondShip for an inLost **HERE**
+        // so need to run SecondShip and ThirdShip together
         [Fact]
         public void RunThirdShip() => Assert.Equal("2 3 S", Run("5 3\n0 3 W\nLLFFFLFLFL"));
 
