@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Challenge
@@ -32,18 +33,21 @@ namespace Challenge
         // accepts an array of strings which are ships
         static string Run(string[] inputs)
         {
-            int gridMaxX;
+            int gridMaxX, gridMaxY, currentPosX = 0, currentPosY = 0;
+            string currentOrientation = null;
+            var isLost = false;
+            var isLostCoordsList = new List<(int x, int y)>();
 
             // loop over each ship 
             foreach (var input in inputs)
             {
                 // split input into a string array based on newline character
-                string[] lines = input.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
+                string[] lines = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
                 // make the grid based on the the first line
                 var gridSizeStringArray = lines[0].Split(' '); // eg 5 3  assuming a single space
                 gridMaxX = int.Parse(gridSizeStringArray[0]); // eg 5 
-                var gridMaxY = int.Parse(gridSizeStringArray[1]); // eg 3
+                gridMaxY = int.Parse(gridSizeStringArray[1]); // eg 3
 
                 // get starting position of the ship
                 var startPosStringArray = lines[1].Split(' '); //eg 1 1 E
@@ -57,18 +61,17 @@ namespace Challenge
                 // 0,0 is lower left, and 5,3 is top right
 
                 // iterate over each instruction
-                int currentPosX = startPosX;
-                int currentPosY = startPosY;
-                string currentOrientation = startPosOrientation;
-                bool isLost = false;
+                currentPosX = startPosX;
+                currentPosY = startPosY;
+                currentOrientation = startPosOrientation;
+                isLost = false;
                 foreach (char i in instructionsString)
                 {
                     var instruction = i.ToString();
                     if (instruction == "L" || instruction == "R")
                         currentOrientation = Rotate(currentOrientation, instruction);
                     if (instruction == "F")
-                        (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation,
-                            gridMaxX, gridMaxY);
+                        (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation, gridMaxX, gridMaxY, isLostCoordsList);
                     // Gone off the grid?
                     if (isLost) break;
                 }
@@ -77,7 +80,7 @@ namespace Challenge
             return currentPosX + " " + currentPosY + " " + currentOrientation + (isLost ? " LOST" : null);
         }
 
-        static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY)
+        static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY, List<(int, int)> isLostCoordsList)
         {
             bool isLost = false;
             if (currentOrientation == "N")
@@ -127,39 +130,39 @@ namespace Challenge
         [Theory]
         // normal movement
         // 9,9 is gridMaxY, gridMaxY
-        [InlineData(0, 0, "N", 9, 9, 0, 1, false)]
-        [InlineData(0, 1, "S", 9, 9, 0, 0, false)]
-        [InlineData(0, 0, "E", 9, 9, 1, 0, false)]
-        [InlineData(1, 0, "W", 9, 9, 0, 0, false)]
-        
+        [InlineData(0, 0, "N", 9, 9, null, 0, 1, false)]
+        [InlineData(0, 1, "S", 9, 9, null, 0, 0, false)]
+        [InlineData(0, 0, "E", 9, 9, null, 1, 0, false)]
+        [InlineData(1, 0, "W", 9, 9, null, 0, 0, false)]
+
         // isLost (with no previous isLosts)
         // North - go off top so lost, gridMaxX 2, gridMaxY 2, expectedX 2, expectedY 2
-        [InlineData(2, 2, "N", 2, 2, 2, 2, true)]
+        [InlineData(2, 2, "N", 2, 2, null, 2, 2, true)]
         // South - go off bottom
-        [InlineData(0, 0, "S", 2, 2, 0, 0, true)]
+        [InlineData(0, 0, "S", 2, 2, null, 0, 0, true)]
         // East
-        [InlineData(2, 1, "E", 2, 2, 2, 1, true)]
+        [InlineData(2, 1, "E", 2, 2, null, 2, 1, true)]
         // West
-        [InlineData(0, 1, "W", 2, 2, 0, 1, true)]
+        [InlineData(0, 1, "W", 2, 2, null, 0, 1, true)]
 
         // **HERE** knownIsLostCoords patch in????
+        [InlineData(2, 2, "N", 2, 2, (2,2), 2, 2, false)]
 
-        public void MoveTests(int currentX, int currentY, string orientation, int gridMaxX, int gridMaxY, int expectedX, int expectedY, bool isLost)
+        public void MoveTests(int currentX, int currentY, string orientation, int gridMaxX, int gridMaxY, List<(int, int)> isLostCoordsList, int expectedX, int expectedY, bool isLost)
         {
-            Assert.Equal((expectedX, expectedY, isLost), Move(currentX, currentY, orientation, gridMaxX, gridMaxY));
+            Assert.Equal((expectedX, expectedY, isLost), Move(currentX, currentY, orientation, gridMaxX, gridMaxY, isLostCoordsList));
         }
 
         [Fact]
-        public void RunFirstShip() => Assert.Equal("1 1 E", Run("5 3\n1 1 E\nRFRFRFRF"));
-        
+        public void RunFirstShip() => Assert.Equal("1 1 E", Run(new[] { "5 3\n1 1 E\nRFRFRFRF" }));
+
         [Fact]
-        public void RunSecondShip() => Assert.Equal("3 3 N LOST", Run("5 3\n3 2 N\nFRRFLLFFRRFLL"));
+        public void RunSecondShip() => Assert.Equal("3 3 N LOST", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL" }));
 
         // ThirdShip depends on the knowledge of SecondShip for an inLost **HERE**
         // so need to run SecondShip and ThirdShip together
         [Fact]
-        public void RunThirdShip() => Assert.Equal("2 3 S", Run("5 3\n0 3 W\nLLFFFLFLFL"));
-
+        public void RunThirdShip() => Assert.Equal("2 3 S", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL", "5 3\n0 3 W\nLLFFFLFLFL" }));
 
 
 
