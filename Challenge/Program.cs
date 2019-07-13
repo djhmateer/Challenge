@@ -30,7 +30,11 @@ namespace Challenge
 
         static void Main(string[] args) => Console.WriteLine("Hello World!");
 
-        // accepts an array of strings which are ships
+        // accepts an array of strings which are ships:
+        // gridMaxX, gridMaxY
+        // x,y, orientation
+        // instructions
+        // eg 5 3\n1 1 E\nRFRFRFRF
         static string Run(string[] inputs)
         {
             int gridMaxX, gridMaxY, currentPosX = 0, currentPosY = 0;
@@ -48,15 +52,18 @@ namespace Challenge
                 var gridSizeStringArray = lines[0].Split(' '); // eg 5 3  assuming a single space
                 gridMaxX = int.Parse(gridSizeStringArray[0]); // eg 5 
                 gridMaxY = int.Parse(gridSizeStringArray[1]); // eg 3
+                if (gridMaxX > 50 || gridMaxY > 50) throw new ArgumentException("Max grid size is 50");
 
                 // get starting position of the ship
                 var startPosStringArray = lines[1].Split(' '); //eg 1 1 E
                 var startPosX = int.Parse(startPosStringArray[0]); // eg 1
                 var startPosY = int.Parse(startPosStringArray[1]); // eg 1
+                if (startPosX > 50 || startPosY > 50) throw new ArgumentException("StartPositions should less or equal to 50");
                 var startPosOrientation = startPosStringArray[2]; // eg E
 
                 // get the instructions
                 var instructionsString = lines[2];
+                if (instructionsString.Length >= 100) throw new ArgumentException("Instructions should be less than 100");
 
                 // 0,0 is lower left, and 5,3 is top right
 
@@ -71,9 +78,16 @@ namespace Challenge
                     if (instruction == "L" || instruction == "R")
                         currentOrientation = Rotate(currentOrientation, instruction);
                     if (instruction == "F")
+                    {
                         (currentPosX, currentPosY, isLost) = Move(currentPosX, currentPosY, currentOrientation, gridMaxX, gridMaxY,
                             warningCoordsList);
-                    if (isLost) break; // Gone off the grid and lost
+                    }
+                    if (isLost)
+                    {
+                        // add to the warningCoordsList
+                        warningCoordsList.Add((currentPosX, currentPosY, currentOrientation));
+                        break; // Gone off the grid and lost
+                    }
                 }
             }
             return currentPosX + " " + currentPosY + " " + currentOrientation + (isLost ? " LOST" : null);
@@ -82,65 +96,77 @@ namespace Challenge
         static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY,
             List<(int, int, string)> warningCoordsList)
         {
-            bool isLost = false;
+            // make an empty list if no warningCoordsList to make easier below
+            if (warningCoordsList == null) warningCoordsList = new List<(int, int, string)>();
+            var isLost = false;
+
             if (currentOrientation == "N")
             {
-                var yy = y + 1;
-                // would this go out of bounds?
-                if (yy > gridMaxY)
-                {
-                    // was there a warning?
-                    (int x, int y, string) thing = (x, y, "N");
-                    if (warningCoordsList.Contains(thing))
-                    {
-                        isLost = false;
-                        // keep on current coords
-                    }
-                    //**HERE**
+                var ytemp = y + 1;
+                // will this go out of bounds
+                if (ytemp > gridMaxY)
+                    if (warningCoordsList.Contains((x, y, "N"))) { }
                     else
-                    {
                         isLost = true;
-                        y--;
-                    }
-
-                }
                 else
                     y++;
-
             }
 
             if (currentOrientation == "S")
             {
-                y--;
-                if (y < 0)
-                {
-                    isLost = true;
-                    y++;
-                }
+                var ytemp = y - 1;
+                if (ytemp < 0)
+                    isLost = !warningCoordsList.Contains((x, y, "S"));
+                else
+                    y--;
             }
 
             if (currentOrientation == "E")
             {
-                x++;
-                if (x > gridMaxX)
-                {
-                    isLost = true;
-                    x--;
-                }
+                var xtemp = x + 1;
+                if (xtemp > gridMaxX)
+                    isLost = !warningCoordsList.Contains((x, y, "E"));
+                else
+                    x++;
             }
 
             if (currentOrientation == "W")
             {
-                x--;
-                if (x < 0)
-                {
-                    isLost = true;
-                    x++;
-                }
+                var xtemp = x - 1;
+                if (xtemp < 0)
+                    isLost = !warningCoordsList.Contains((x, y, "W"));
+                else
+                    x--;
             }
 
             return (x, y, isLost);
         }
+
+        [Fact]
+        public void MoveWithWarningCoordsN()
+        {
+            var expected = (0, 2, false);
+            Assert.Equal(expected, Move(0, 2, "N", 2, 2, new List<(int, int, string)> { (0, 2, "N") }));
+        }
+        [Fact]
+        public void MoveWithWarningCoordsS()
+        {
+            var expected = (2, 0, false);
+            Assert.Equal(expected, Move(2, 0, "S", 2, 2, new List<(int, int, string)> { (2, 0, "S") }));
+        }
+        [Fact]
+        public void MoveWithWarningCoordsE()
+        {
+            var expected = (2, 0, false);
+            Assert.Equal(expected, Move(2, 0, "E", 2, 2, new List<(int, int, string)> { (2, 0, "E") }));
+        }
+        [Fact]
+        public void MoveWithWarningCoordsW()
+        {
+            var expected = (0, 2, false);
+            Assert.Equal(expected, Move(0, 2, "W", 2, 2, new List<(int, int, string)> { (0, 2, "W") }));
+        }
+
 
         [Theory]
         // normal movement
@@ -161,17 +187,10 @@ namespace Challenge
         [InlineData(0, 1, "W", 2, 2, null, 0, 1, true)]
 
 
-        public void MoveTests(int currentX, int currentY, string orientation, int gridMaxX, int gridMaxY, List<(int, int)> isLostCoordsList, int expectedX, int expectedY, bool isLost)
+        public void MoveTests(int currentX, int currentY, string orientation, int gridMaxX, int gridMaxY,
+            List<(int, int, string)> isLostCoordsList, int expectedX, int expectedY, bool isLost)
         {
             Assert.Equal((expectedX, expectedY, isLost), Move(currentX, currentY, orientation, gridMaxX, gridMaxY, isLostCoordsList));
-        }
-
-        // **HERE** warningCoords patch in????
-        [Fact]
-        public void MoveWithWarningCoords()
-        {
-            var expected = (2, 0, false);
-            Assert.Equal(expected, Move(2, 0, "E", 2, 2, new List<(int, int, string)> { (2, 0, "E") }));
         }
 
 
@@ -181,11 +200,13 @@ namespace Challenge
         [Fact]
         public void RunSecondShip() => Assert.Equal("3 3 N LOST", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL" }));
 
-        // ThirdShip depends on the knowledge of SecondShip for an inLost **HERE**
+        // ThirdShip depends on the knowledge of SecondShip for a warning
         // so need to run SecondShip and ThirdShip together
         [Fact]
         public void RunThirdShip() => Assert.Equal("2 3 S", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL", "5 3\n0 3 W\nLLFFFLFLFL" }));
 
+        [Fact]
+        public void RunAllShips() => Assert.Equal("2 3 S", Run(new[] { "5 3\n1 1 E\nRFRFRFRF", "5 3\n3 2 N\nFRRFLLFFRRFLL", "5 3\n0 3 W\nLLFFFLFLFL" }));
 
 
         static string Rotate(string current, string direction)
@@ -209,6 +230,38 @@ namespace Challenge
         public void RotateSouthToEast() => Assert.Equal("E", Rotate("S", "L"));
         [Fact]
         public void RotateNorthToWest() => Assert.Equal("W", Rotate("N", "L"));
+
+        [Fact]
+        public void GridMaxXShouldThrowIfMoreThan50() =>
+                    Assert.Throws<ArgumentException>(() => Run(new[] { "51 3\n1 1 E\nRFRFRFRF" }));
+
+        [Fact]
+        public void GridMaxYShouldThrowIfMoreThan50() =>
+            Assert.Throws<ArgumentException>(() => Run(new[] { "5 51\n1 1 E\nRFRFRFRF" }));
+
+        [Fact]
+        public void XShouldThrowIfMoreThan50() =>
+            Assert.Throws<ArgumentException>(() => Run(new[] { "5 3\n51 1 E\nRFRFRFRF" }));
+
+        [Fact]
+        public void YShouldThrowIfMoreThan50() =>
+            Assert.Throws<ArgumentException>(() => Run(new[] { "5 3\n5 51 E\nRFRFRFRF" }));
+
+
+        [Fact]
+        public void InstructionStringMoreOrEqualTo100ShouldThrow()
+        {
+            var instructions = new string('R', 100);
+            Assert.Throws<ArgumentException>(() => Run(new[] { $"5 3\n1 1 E\n{instructions}" }));
+        }
+        [Fact]
+        public void InstructionStringLessThan100ShouldNotThrow()
+        {
+            var instructions = new string('R', 99);
+            // if no exception thrown the test will pass
+            var result = Run(new[] { $"5 3\n1 1 E\n{instructions}" });
+        }
+
 
     }
 }
