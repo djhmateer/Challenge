@@ -224,10 +224,10 @@ namespace Challenge
         // ThirdShip depends on the knowledge of SecondShip for a warning
         // so need to run SecondShip and ThirdShip together
         [Fact]
-        public void RunThirdShip() => Assert.Equal("2 3 S", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL", "5 3\n0 3 W\nLLFFFLFLFL" }));
+        public void RunThirdShip() => Assert.Equal("2 3 S", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL", "0 3 W\nLLFFFLFLFL" }));
 
         [Fact]
-        public void RunAllShips() => Assert.Equal("2 3 S", Run(new[] { "5 3\n1 1 E\nRFRFRFRF", "5 3\n3 2 N\nFRRFLLFFRRFLL", "5 3\n0 3 W\nLLFFFLFLFL" }));
+        public void RunAllShips() => Assert.Equal("2 3 S", Run(new[] { "5 3\n1 1 E\nRFRFRFRF", "3 2 N\nFRRFLLFFRRFLL", "0 3 W\nLLFFFLFLFL" }));
 
 
         static string Rotate(string current, string direction)
