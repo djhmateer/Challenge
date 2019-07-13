@@ -200,6 +200,14 @@ namespace Challenge
         [Fact]
         public void RunSecondShip() => Assert.Equal("3 3 N LOST", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL" }));
 
+        // we only pass the maxgrid size on the first ship
+        [Fact]
+        public void RunFirstAndSecondShip()
+        {
+            Assert.Equal("3 3 N LOST", Run(new[] {"5 3\n1 1 E\nRFRFRFRF", "3 2 N\nFRRFLLFFRRFLL"}));
+        }
+
+
         // ThirdShip depends on the knowledge of SecondShip for a warning
         // so need to run SecondShip and ThirdShip together
         [Fact]
