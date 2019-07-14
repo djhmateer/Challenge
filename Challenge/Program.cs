@@ -7,6 +7,7 @@ namespace Challenge
     {
         // Requires .NET Core 2.2
         // Run the Console App to see Ship1,2,3 runs
+        // See Test.cs for all xUnit tests
 
         // This is an initial effort to get it working 
         // and is developed in a TDD style
@@ -59,6 +60,7 @@ namespace Challenge
             }
         }
 
+        // Runs the engine - accepts input and returns output
         // accepts an array of strings which are ships:
         // gridMaxX, gridMaxY
         // x,y, orientation
@@ -66,7 +68,7 @@ namespace Challenge
         // eg 5 3\n1 1 E\nRFRFRFRF
         public static string Run(string[] inputs)
         {
-            // if there are multiple ships the grid is defined only by the first ship
+            // If there are multiple ships the grid is defined only by the first ship
             // currentPosX, Y, currentOrientation, isLost are defined here as need to be returned from this method
             int gridMaxX = 0, gridMaxY = 0, currentPosX = 0, currentPosY = 0;
             string currentOrientation = null;
@@ -74,19 +76,19 @@ namespace Challenge
             // warningCoordsList needs to be passed between ships eg see ship2 and ship3 test
             var warningCoordsList = new List<(int x, int y, string direction)>();
 
-            // loop over each ship 
-            for (var i = 0; i < inputs.Length; i++)
+            // Loop over each ship 
+            for (var ship = 0; ship < inputs.Length; ship++)
             {
-                // split input newline
-                var lines = inputs[i].Split("\n");
+                // split input lines based on newline character \n
+                var lines = inputs[ship].Split("\n");
 
-                // if multiple ships then only the first includes the grid size on the first line
+                // If multiple ships then only the first includes the grid size on the first line
                 var gridSizeLine = 0;
                 var startPositionLine = 1;
                 var instructionPositionLine = 2;
 
-                // if it is the first ship assume gridsize is on first line
-                if (i == 0)
+                // If it is the first ship assume gridsize is on first line
+                if (ship == 0)
                 {
                     // make the grid based on the the first line
                     var gridSizeStringArray = lines[gridSizeLine].Split(' '); // eg 5 3  assuming a single space
@@ -95,13 +97,13 @@ namespace Challenge
                     if (gridMaxX > 50 || gridMaxY > 50) throw new ArgumentException("Max grid size is 50");
                 }
                 else
-                // not the first ship so first line will be startPositionLine.. 
+                // Not the first ship so first line will be startPositionLine.. 
                 {
                     startPositionLine--;
                     instructionPositionLine--;
                 }
 
-                // get starting position of the ship
+                // Starting position of the ship
                 var startPosStringArray = lines[startPositionLine].Split(' '); //eg 1 1 E
                 var startPosX = int.Parse(startPosStringArray[0]); // eg 1
                 var startPosY = int.Parse(startPosStringArray[1]); // eg 1
@@ -109,17 +111,17 @@ namespace Challenge
                     throw new ArgumentException("StartPositions should less or equal to 50");
                 var startPosOrientation = startPosStringArray[2]; // eg E
 
-                // get the instructions
+                // Instructions
                 var instructionsString = lines[instructionPositionLine];
                 if (instructionsString.Length >= 100)
                     throw new ArgumentException("Instructions should be less than 100");
 
-                // set current position and orientation of ship (starting position)
+                // Set current position and orientation of ship (starting position)
                 currentPosX = startPosX;
                 currentPosY = startPosY;
                 currentOrientation = startPosOrientation;
                 isLost = false;
-                // iterate over each instruction
+                // Iterate over each instruction
                 foreach (char c in instructionsString)
                 {
                     var instruction = c.ToString();
@@ -133,9 +135,9 @@ namespace Challenge
 
                     if (isLost)
                     {
-                        // add to the warningCoordsList for next ship if there is one
+                        // Add to the warningCoordsList for next ship if there is one
                         warningCoordsList.Add((currentPosX, currentPosY, currentOrientation));
-                        break; // out of foreach. Gone off the grid and lost
+                        break; // Gone off the grid and ship is lost
                     }
                 }
             }
@@ -145,15 +147,14 @@ namespace Challenge
         public static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY,
             List<(int, int, string)> warningCoordsList)
         {
-            // make an empty list if no warningCoordsList to make easier below
+            // Make an empty list if no warningCoordsList to make easier below
             if (warningCoordsList == null) warningCoordsList = new List<(int, int, string)>();
             var isLost = false;
 
             if (currentOrientation == "N")
             {
-                var ytemp = y + 1;
-                // will this go out of bounds
-                if (ytemp > gridMaxY)
+                // Will this go out of bounds?
+                if (y + 1 > gridMaxY)
                     if (warningCoordsList.Contains((x, y, "N"))) { }
                     else
                         isLost = true;
@@ -163,37 +164,41 @@ namespace Challenge
 
             if (currentOrientation == "S")
             {
-                var ytemp = y - 1;
-                if (ytemp < 0)
-                    isLost = !warningCoordsList.Contains((x, y, "S"));
+                if (y - 1 < 0)
+                    if (warningCoordsList.Contains((x, y, "S"))) { }
+                    else
+                        isLost = true;
                 else
                     y--;
             }
 
             if (currentOrientation == "E")
             {
-                var xtemp = x + 1;
-                if (xtemp > gridMaxX)
-                    isLost = !warningCoordsList.Contains((x, y, "E"));
+                if (x + 1 > gridMaxX)
+                    if (warningCoordsList.Contains((x, y, "E"))) { }
+                    else
+                        isLost = true;
                 else
                     x++;
             }
 
             if (currentOrientation == "W")
             {
-                var xtemp = x - 1;
-                if (xtemp < 0)
-                    isLost = !warningCoordsList.Contains((x, y, "W"));
+                if (x - 1 < 0)
+                    if (warningCoordsList.Contains((x, y, "W"))) { }
+                    else
+                        isLost = true;
                 else
                     x--;
             }
+
             return (x, y, isLost);
         }
 
         public static string Rotate(string current, string direction)
         {
             var compass = "NESW";
-            int index = compass.IndexOf(current); // eg 1 is East
+            var index = compass.IndexOf(current); // eg 1 is East
 
             if (direction == "R") index++; else index--;
 
