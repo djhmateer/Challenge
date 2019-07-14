@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace Challenge
 {
     public class Program
     {
+        // Requires .NET Core 2.2
         // Run the Console App to see Ship1,2,3 runs
-        // Unit tests are in Xunit
 
         // This is an initial effort to get it working 
         // and is developed in a TDD style
@@ -20,7 +19,7 @@ namespace Challenge
         //   orientation: N,S,E,W
         // ship instruction:
         //   L - turn left 90 degrees and remain on current grid
-        //   R - turn right 90 and reamin on current grid
+        //   R - turn right 90 and remain on current grid
         //   Forward - move forward.
         //     N - (x,y) to (x,y+1)
         // grid is rectangular
@@ -65,7 +64,7 @@ namespace Challenge
         // x,y, orientation
         // instructions
         // eg 5 3\n1 1 E\nRFRFRFRF
-        static string Run(string[] inputs)
+        public static string Run(string[] inputs)
         {
             // if there are multiple ships the grid is defined only by the first ship
             // currentPosX, Y, currentOrientation, isLost are defined here as need to be returned from this method
@@ -143,7 +142,7 @@ namespace Challenge
             return currentPosX + " " + currentPosY + " " + currentOrientation + (isLost ? " LOST" : null);
         }
 
-        static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY,
+        public static (int x, int y, bool isLost) Move(int x, int y, string currentOrientation, int gridMaxX, int gridMaxY,
             List<(int, int, string)> warningCoordsList)
         {
             // make an empty list if no warningCoordsList to make easier below
@@ -188,86 +187,10 @@ namespace Challenge
                 else
                     x--;
             }
-
             return (x, y, isLost);
         }
 
-        [Fact]
-        public void MoveWithWarningCoordsN()
-        {
-            var expected = (0, 2, false);
-            Assert.Equal(expected, Move(0, 2, "N", 2, 2, new List<(int, int, string)> { (0, 2, "N") }));
-        }
-        [Fact]
-        public void MoveWithWarningCoordsS()
-        {
-            var expected = (2, 0, false);
-            Assert.Equal(expected, Move(2, 0, "S", 2, 2, new List<(int, int, string)> { (2, 0, "S") }));
-        }
-        [Fact]
-        public void MoveWithWarningCoordsE()
-        {
-            var expected = (2, 0, false);
-            Assert.Equal(expected, Move(2, 0, "E", 2, 2, new List<(int, int, string)> { (2, 0, "E") }));
-        }
-        [Fact]
-        public void MoveWithWarningCoordsW()
-        {
-            var expected = (0, 2, false);
-            Assert.Equal(expected, Move(0, 2, "W", 2, 2, new List<(int, int, string)> { (0, 2, "W") }));
-        }
-
-
-        [Theory]
-        // normal movement
-        // 9,9 is gridMaxY, gridMaxY
-        [InlineData(0, 0, "N", 9, 9, null, 0, 1, false)]
-        [InlineData(0, 1, "S", 9, 9, null, 0, 0, false)]
-        [InlineData(0, 0, "E", 9, 9, null, 1, 0, false)]
-        [InlineData(1, 0, "W", 9, 9, null, 0, 0, false)]
-
-        // isLost (with no previous isLosts)
-        // North - go off top so lost, gridMaxX 2, gridMaxY 2, expectedX 2, expectedY 2
-        [InlineData(2, 2, "N", 2, 2, null, 2, 2, true)]
-        // South - go off bottom
-        [InlineData(0, 0, "S", 2, 2, null, 0, 0, true)]
-        // East
-        [InlineData(2, 1, "E", 2, 2, null, 2, 1, true)]
-        // West
-        [InlineData(0, 1, "W", 2, 2, null, 0, 1, true)]
-
-
-        public void MoveTests(int currentX, int currentY, string orientation, int gridMaxX, int gridMaxY,
-            List<(int, int, string)> isLostCoordsList, int expectedX, int expectedY, bool isLost)
-        {
-            Assert.Equal((expectedX, expectedY, isLost), Move(currentX, currentY, orientation, gridMaxX, gridMaxY, isLostCoordsList));
-        }
-
-
-        [Fact]
-        public void RunFirstShip() => Assert.Equal("1 1 E", Run(new[] { "5 3\n1 1 E\nRFRFRFRF" }));
-
-        [Fact]
-        public void RunSecondShip() => Assert.Equal("3 3 N LOST", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL" }));
-
-        // we only pass the maxgrid size on the first ship
-        [Fact]
-        public void RunFirstAndSecondShip()
-        {
-            Assert.Equal("3 3 N LOST", Run(new[] { "5 3\n1 1 E\nRFRFRFRF", "3 2 N\nFRRFLLFFRRFLL" }));
-        }
-
-
-        // ThirdShip depends on the knowledge of SecondShip for a warning
-        // so need to run SecondShip and ThirdShip together
-        [Fact]
-        public void RunThirdShip() => Assert.Equal("2 3 S", Run(new[] { "5 3\n3 2 N\nFRRFLLFFRRFLL", "0 3 W\nLLFFFLFLFL" }));
-
-        [Fact]
-        public void RunAllShips() => Assert.Equal("2 3 S", Run(new[] { "5 3\n1 1 E\nRFRFRFRF", "3 2 N\nFRRFLLFFRRFLL", "0 3 W\nLLFFFLFLFL" }));
-
-
-        static string Rotate(string current, string direction)
+        public static string Rotate(string current, string direction)
         {
             var compass = "NESW";
             int index = compass.IndexOf(current); // eg 1 is East
@@ -279,47 +202,5 @@ namespace Challenge
 
             return compass[index].ToString();
         }
-
-        [Fact]
-        public void RotateEastToSouth() => Assert.Equal("S", Rotate("E", "R"));
-        [Fact]
-        public void RotateWestToNorth() => Assert.Equal("N", Rotate("W", "R"));
-        [Fact]
-        public void RotateSouthToEast() => Assert.Equal("E", Rotate("S", "L"));
-        [Fact]
-        public void RotateNorthToWest() => Assert.Equal("W", Rotate("N", "L"));
-
-        [Fact]
-        public void GridMaxXShouldThrowIfMoreThan50() =>
-                    Assert.Throws<ArgumentException>(() => Run(new[] { "51 3\n1 1 E\nRFRFRFRF" }));
-
-        [Fact]
-        public void GridMaxYShouldThrowIfMoreThan50() =>
-            Assert.Throws<ArgumentException>(() => Run(new[] { "5 51\n1 1 E\nRFRFRFRF" }));
-
-        [Fact]
-        public void XShouldThrowIfMoreThan50() =>
-            Assert.Throws<ArgumentException>(() => Run(new[] { "5 3\n51 1 E\nRFRFRFRF" }));
-
-        [Fact]
-        public void YShouldThrowIfMoreThan50() =>
-            Assert.Throws<ArgumentException>(() => Run(new[] { "5 3\n5 51 E\nRFRFRFRF" }));
-
-
-        [Fact]
-        public void InstructionStringMoreOrEqualTo100ShouldThrow()
-        {
-            var instructions = new string('R', 100);
-            Assert.Throws<ArgumentException>(() => Run(new[] { $"5 3\n1 1 E\n{instructions}" }));
-        }
-        [Fact]
-        public void InstructionStringLessThan100ShouldNotThrow()
-        {
-            var instructions = new string('R', 99);
-            // if no exception thrown the test will pass
-            var result = Run(new[] { $"5 3\n1 1 E\n{instructions}" });
-        }
-
-
     }
 }
