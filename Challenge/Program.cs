@@ -28,7 +28,33 @@ namespace Challenge
         // each ship is processed sequentially ie finishes executing before the next ship begins
         // max value of coordinate is 50, all instruction strings < 100 characters in length
 
-        static void Main(string[] args) => Console.WriteLine("Hello World!");
+        static void Main(string[] args)
+        {
+            while (true)
+            {
+                Console.WriteLine("Welcome to the Ship Challenge (x to exit)\n");
+                var ship1 = "5 3\n1 1 E\nRFRFRFRF";
+                var ship2 = "5 3\n3 2 N\nFRRFLLFFRRFLL";
+                var ship3 = "0 3 W\nLLFFFLFLFL";
+                Console.WriteLine("\n1 for ship1:");
+                Console.WriteLine(ship1);
+                Console.WriteLine("\n2 for ship2:");
+                Console.WriteLine(ship2);
+                Console.WriteLine("\n3 for ship2 and ship3:");
+                Console.WriteLine(ship3);
+
+                var keypress = Console.ReadKey().Key;
+                var list = new List<string>();
+                if (keypress == ConsoleKey.X) break;
+                if (keypress == ConsoleKey.D1) list.Add(ship1);
+                if (keypress == ConsoleKey.D2) list.Add(ship2);
+                if (keypress == ConsoleKey.D3) list.AddRange(new[] {ship2, ship3});
+                var output = Run(list.ToArray());
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\n\n Output: {output} \n\n");
+                Console.ResetColor();
+            }
+        }
 
         // accepts an array of strings which are ships:
         // gridMaxX, gridMaxY
