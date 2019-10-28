@@ -5,36 +5,10 @@ namespace Challenge
 {
     public class Program
     {
-        // Requires .NET Core 2.2
-        // Run the Console App to see Ship1,2,3 runs
-        // See Test.cs for all xUnit tests
-
-        // This is an initial effort to get it working 
-        // and is developed in a TDD style
-
-        // Instructions:
-
-        // determines each sequence of ship positions and reports the final position of the ship
-        // ship position:
-        //   x,y
-        //   orientation: N,S,E,W
-        // ship instruction:
-        //   L - turn left 90 degrees and remain on current grid
-        //   R - turn right 90 and remain on current grid
-        //   Forward - move forward.
-        //     N - (x,y) to (x,y+1)
-        // grid is rectangular
-        // lost ships leave a warning at the last grid position
-        // an instruction to move 'off' the world from a grid point from which a ship has been previously lost is ignored
-
-        // input
-        // first line is top right of the grid eg 5 3
-        // lower left is 0,0
-        // second line is initial coordinate of first ship and Orientation.. all separated by whitespace on 1 line
-        // third line is ship instruction: eg LFRFRF
-        // then 4 and 5 etc...
-        // each ship is processed sequentially ie finishes executing before the next ship begins
-        // max value of coordinate is 50, all instruction strings < 100 characters in length
+        // Based on the challenge defined by Mike Hadlow
+        // https://github.com/mikehadlow/Journeys
+        // another implementation by Mark Seemann
+        // https://blog.ploeh.dk/2019/10/28/a-basic-haskell-solution-to-the-robot-journeys-coding-exercise/
 
         static void Main()
         {
